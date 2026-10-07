@@ -18,7 +18,7 @@ public class MainActivity extends Activity {
     private TextView reportText;
     private Handler handler;
 
-    private final int REFRESH_MS = 15000;
+    private static final int REFRESH_MS = 15000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,13 +45,7 @@ public class MainActivity extends Activity {
         title.setGravity(Gravity.CENTER);
         title.setPadding(0, 10, 0, 20);
 
-        root.addView(
-                title,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        -2
-                )
-        );
+        root.addView(title);
 
         LinearLayout searchRow = new LinearLayout(this);
         searchRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -74,7 +68,8 @@ public class MainActivity extends Activity {
 
         searchButton.setOnClickListener(v -> {
 
-            String kode = stockInput.getText()
+            String kode = stockInput
+                    .getText()
                     .toString()
                     .trim()
                     .toUpperCase();
@@ -87,13 +82,7 @@ public class MainActivity extends Activity {
             loadAnalysis(kode);
         });
 
-        searchRow.addView(
-                searchButton,
-                new LinearLayout.LayoutParams(
-                        -2,
-                        -2
-                )
-        );
+        searchRow.addView(searchButton);
 
         root.addView(searchRow);
 
@@ -147,7 +136,10 @@ public class MainActivity extends Activity {
                             loadAnalysis(kode);
                         }
 
-                        handler.postDelayed(this, REFRESH_MS);
+                        handler.postDelayed(
+                                this,
+                                REFRESH_MS
+                        );
                     }
                 },
                 REFRESH_MS
@@ -157,30 +149,95 @@ public class MainActivity extends Activity {
     private void loadAnalysis(String kode) {
 
         statusText.setText(
-                "Status: mengambil data " + kode + "..."
+                "Status: menghubungkan ke RTI..."
         );
 
         reportText.setText(
                 "IDX TECHNICAL ANALYSIS\n\n"
                 + "Kode       : " + kode + "\n"
                 + "RTI        : menghubungkan...\n"
-                + "Refresh    : setiap 15 detik\n\n"
+                + "Refresh    : 15 detik\n\n"
                 + "Technical Analysis\n"
                 + "-------------------------\n"
-                + "Trend      : menunggu data\n"
+                + "Trend       : menunggu data\n"
                 + "Price Action: menunggu data\n"
-                + "FVG        : menunggu data\n"
-                + "Support    : menunggu data\n"
-                + "Resistance : menunggu data\n"
-                + "Breakout   : menunggu data\n\n"
+                + "FVG         : menunggu data\n"
+                + "Support     : menunggu data\n"
+                + "Resistance  : menunggu data\n"
+                + "Breakout    : menunggu data\n\n"
                 + "Trading Scenarios\n"
                 + "-------------------------\n"
                 + "1. Rebound / Sell\n"
                 + "2. Breakout\n"
                 + "3. Entry Scenario\n"
                 + "4. Risk Management\n\n"
-                + "Catatan:\n"
-                + "Data realtime akan diisi oleh RTI client."
+                + "Mengambil data RTI..."
+        );
+
+        RtiClient.getRealtime(
+                kode,
+                new RtiClient.Callback() {
+
+                    @Override
+                    public void onSuccess(
+                            final String result
+                    ) {
+
+                        runOnUiThread(
+                                new Runnable() {
+
+                                    @Override
+                                    public void run() {
+
+                                        statusText.setText(
+                                                "Status: RTI terhubung"
+                                        );
+
+                                        reportText.setText(
+                                                "IDX TECHNICAL ANALYSIS\n\n"
+                                                + "Kode: "
+                                                + kode
+                                                + "\n\n"
+                                                + "RTI RESPONSE\n"
+                                                + "-------------------------\n"
+                                                + result
+                                        );
+                                    }
+                                }
+                        );
+                    }
+
+                    @Override
+                    public void onError(
+                            final String error
+                    ) {
+
+                        runOnUiThread(
+                                new Runnable() {
+
+                                    @Override
+                                    public void run() {
+
+                                        statusText.setText(
+                                                "Status: RTI gagal"
+                                        );
+
+                                        reportText.setText(
+                                                "IDX TECHNICAL ANALYSIS\n\n"
+                                                + "Kode: "
+                                                + kode
+                                                + "\n\n"
+                                                + "RTI STATUS\n"
+                                                + "-------------------------\n"
+                                                + error
+                                                + "\n\n"
+                                                + "Tidak ada data palsu."
+                                        );
+                                    }
+                                }
+                        );
+                    }
+                }
         );
     }
 
